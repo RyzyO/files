@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Happy Birthday James</title>
+<meta name="description" content="A birthday film for James.">
+<style>
+  /* TAN Headline, loaded from the local file. */
+  @font-face {
+    font-family: "TAN Headline";
+    src: local("TAN Headline"), local("TAN-Headline"),
+         url("TANHEADLINE-Regular.ttf") format("truetype");
+    font-display: swap;
+  }
+  :root {
+    --bg: #000080;
+    --bg-2: #00005c;
+    --ink: #ffde59;
+    --ink-2: rgb(255 222 89 / .8);
+    --line: rgb(255 222 89 / .35);
+    --accent: #ffde59;
+    --accent-ink: #000080;
+    --radius: 14px;
+    --shadow: 0 30px 90px -30px rgb(0 0 0 / .6);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "TAN Headline", "Outfit", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 56px); }
+
+  /* Hero */
+  .hero { padding-top: clamp(24px, 5vh, 64px); }
+  .top { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: end; }
+  h1 {
+    font-size: clamp(2.6rem, 8.2vw, 7.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  h1 em { font-style: italic; padding-bottom: .06em; display: inline-block; line-height: 1.1; }
+  .sub { color: var(--ink-2); max-width: 46ch; font-size: clamp(1rem, 1.6vw, 1.25rem); margin-top: 16px; }
+
+  /* Video stage */
+  .stage { margin-top: clamp(24px, 4vh, 48px); position: relative; }
+  .frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line);
+  }
+  .frame video { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
+  .empty {
+    position: absolute; inset: 0; display: none;
+    place-items: center; text-align: center; padding: 24px;
+    color: var(--ink-2);
+  }
+  .frame.missing .empty { display: grid; }
+  .frame.missing video { visibility: hidden; }
+  .frame.missing .cover, .frame.missing .bar, .frame.missing .tap, .frame.missing .center { display: none !important; }
+
+  /* Custom player. Native controls return only in fullscreen. */
+  .frame video { cursor: pointer; }
+  .cover {
+    position: absolute; inset: 0; display: grid; place-items: center; border: 0; padding: 0;
+    background: rgb(0 0 128 / .35); color: var(--ink); font: inherit; cursor: pointer;
+    transition: opacity .3s;
+  }
+  .cover span {
+    background: var(--accent); color: var(--accent-ink); border-radius: var(--radius);
+    padding: 18px 36px; font-size: clamp(1.1rem, 2.4vw, 1.8rem); letter-spacing: .02em;
+    transition: transform .25s cubic-bezier(.16,1,.3,1);
+  }
+  .cover:hover span { transform: scale(1.04); }
+  .cover:focus-visible { outline: 3px solid var(--accent); outline-offset: -6px; }
+  .frame.started .cover { opacity: 0; pointer-events: none; }
+  .bar {
+    position: absolute; left: 0; right: 0; bottom: 0; display: grid;
+    grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: clamp(8px, 1.6vw, 18px);
+    padding: 36px clamp(12px, 2vw, 24px) clamp(10px, 1.6vw, 18px);
+    background: linear-gradient(to top, rgb(0 0 60 / .92), transparent);
+    opacity: 0; transform: translateY(8px); pointer-events: none;
+    transition: opacity .3s, transform .3s cubic-bezier(.16,1,.3,1);
+  }
+  .frame.started.ui .bar, .frame.started:has(:focus-visible) .bar { opacity: 1; transform: none; pointer-events: auto; }
+  .bar button {
+    appearance: none; background: transparent; color: var(--ink); border: 1px solid var(--line);
+    border-radius: var(--radius); font: inherit; padding: 8px 16px; cursor: pointer; white-space: nowrap;
+    min-width: 5.5rem; transition: background .2s, color .2s, transform .2s cubic-bezier(.16,1,.3,1);
+  }
+  .bar button:hover { background: var(--accent); color: var(--accent-ink); }
+  .bar button:active { transform: scale(.97); }
+  .bar button:focus-visible, .bar input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .time { font-variant-numeric: tabular-nums; color: var(--ink); font-size: .95rem; white-space: nowrap; }
+  .seek { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; cursor: pointer; --p: 0%; }
+  .seek::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 6px;
+    background: linear-gradient(to right, var(--accent) var(--p), rgb(255 222 89 / .3) var(--p));
+  }
+  .seek::-moz-range-track { height: 6px; border-radius: 6px; background: rgb(255 222 89 / .3); }
+  .seek::-moz-range-progress { height: 6px; border-radius: 6px; background: var(--accent); }
+  .seek::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: var(--accent); border: 2px solid var(--accent-ink); }
+  .seek::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--accent-ink); }
+  .frame:fullscreen { border-radius: 0; border: 0; aspect-ratio: auto; background: #000; }
+  .frame:fullscreen video { object-fit: contain; }
+
+  /* Touch player: big targets, tap to show controls, double tap to skip 10s. */
+  .tap, .center, .flash { display: none; }
+  .frame.touch video { cursor: auto; }
+  .frame.touch .tap { display: block; position: absolute; inset: 0; background: transparent; border: 0; padding: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .frame.touch .center {
+    display: grid; place-items: center; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    min-width: 128px; height: 64px; padding: 0 28px; border: 0; border-radius: var(--radius);
+    background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 1.25rem;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .frame.touch.started.ui .center, .frame.touch.started.paused .center { opacity: 1; pointer-events: auto; }
+  .frame.touch .center:active { transform: translate(-50%, -50%) scale(.96); }
+  .frame.touch .flash {
+    display: grid; place-items: center; position: absolute; top: 50%; width: 96px; height: 96px; margin-top: -48px;
+    border-radius: 50%; background: rgb(255 222 89 / .92); color: var(--accent-ink); font-size: 1.1rem;
+    opacity: 0; pointer-events: none;
+  }
+  .frame.touch .flash.l { left: 12%; }
+  .frame.touch .flash.r { right: 12%; }
+  .frame.touch .flash.go { animation: flash .6s ease-out; }
+  @keyframes flash { 0% { opacity: 1; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.1); } }
+  .frame.touch .cover span { padding: 20px 44px; font-size: 1.5rem; }
+  .frame.touch .bar {
+    grid-template-columns: 1fr auto auto; grid-template-areas: "seek seek seek" "time mute fs";
+    row-gap: 4px; padding: 40px 16px 12px;
+  }
+  .frame.touch .bar #pp { display: none; }
+  .frame.touch .bar #seek { grid-area: seek; height: 44px; }
+  .frame.touch .bar .time { grid-area: time; font-size: 1rem; }
+  .frame.touch .bar #mute { grid-area: mute; }
+  .frame.touch .bar #fs { grid-area: fs; }
+  .frame.touch .bar button { min-width: 0; min-height: 48px; padding: 0 20px; font-size: 1rem; }
+  .frame.touch .seek::-webkit-slider-runnable-track { height: 10px; border-radius: 10px; }
+  .frame.touch .seek::-webkit-slider-thumb { width: 28px; height: 28px; margin-top: -9px; }
+  .frame.touch .seek::-moz-range-track, .frame.touch .seek::-moz-range-progress { height: 10px; border-radius: 10px; }
+  .frame.touch .seek::-moz-range-thumb { width: 24px; height: 24px; }
+  @media (max-width: 640px) {
+    .frame:not(.touch) .bar { grid-template-columns: auto 1fr auto; }
+    .frame:not(.touch) .bar .time { grid-column: 1 / -1; order: 5; }
+    .frame:not(.touch) .bar #mute { display: none; }
+    .frame:not(.touch) .bar button { min-width: 0; padding: 8px 12px; }
+  }
+  code { background: var(--bg); border: 1px solid var(--line); padding: 2px 8px; border-radius: 8px; color: var(--ink); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+  .btn {
+    appearance: none; border: 1px solid var(--line); background: transparent; color: var(--ink);
+    font: inherit; font-weight: 600; padding: 14px 24px; border-radius: var(--radius);
+    cursor: pointer; white-space: nowrap;
+    transition: transform .2s cubic-bezier(.16,1,.3,1), background .2s, border-color .2s;
+  }
+  .btn:hover { border-color: var(--ink); }
+  .btn:active { transform: translateY(1px) scale(.98); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  /* Closing band */
+  .close { margin-top: clamp(56px, 12vh, 140px); padding: clamp(48px, 9vh, 112px) 0; border-top: 1px solid var(--line); }
+  .close p { font-size: clamp(1.6rem, 4.4vw, 3.6rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; max-width: 18ch; }
+  .close p span { font-style: italic; }
+
+  canvas#fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+  /* Entry motion: orients the eye headline first, then film */
+  @media (prefers-reduced-motion: no-preference) {
+    .rise { opacity: 0; transform: translateY(24px); animation: rise .9s cubic-bezier(.16,1,.3,1) forwards; }
+    .rise.d1 { animation-delay: .1s; } .rise.d2 { animation-delay: .25s; } .rise.d3 { animation-delay: .4s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s, transform .8s cubic-bezier(.16,1,.3,1); }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="top">
+      <h1 class="rise d1">Happy birthday,<br><em>James.</em></h1>
+      <p class="sub rise d2">Press play. This one is for you.</p>
+    </div>
+
+    <div class="stage rise d3">
+      <div class="frame" id="frame">
+        <video id="film" playsinline preload="metadata">
+          <!-- Put your video next to this file and name it JAMES.mp4, or change the src below. -->
+          <source src="JAMES.mp4" type="video/mp4">
+        </video>
+        <div class="empty"><p>Video not found. Save it beside this page as <code>JAMES.mp4</code>.</p></div>
+        <button class="tap" id="tap" type="button" aria-label="Show or hide controls"></button>
+        <span class="flash l" id="fl" aria-hidden="true">-10s</span>
+        <span class="flash r" id="fr" aria-hidden="true">+10s</span>
+        <button class="center" id="center" type="button">Play</button>
+        <button class="cover" id="cover" type="button" aria-label="Play the film"><span>Play</span></button>
+        <div class="bar" id="bar" role="group" aria-label="Video controls">
+          <button type="button" id="pp">Play</button>
+          <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+          <span class="time" id="time">0:00 / 0:00</span>
+          <button type="button" id="mute">Mute</button>
+          <button type="button" id="fs">Fullscreen</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="confetti" type="button">Throw confetti</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="close reveal">
+    <p>Another year older. <span>Still the best.</span></p>
+  </section>
+</main>
+
+<script>
+(function () {
+  var film = document.getElementById('film');
+  var frame = document.getElementById('frame');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Missing-file empty state */
+  var src = film.querySelector('source');
+  src.addEventListener('error', function () { frame.classList.add('missing'); });
+
+  film.addEventListener('ended', function () { burst(); });
+
+  /* Custom player. Desktop: hover bar. Touch: tap layer, big targets, double tap to skip. */
+  var $ = function (id) { return document.getElementById(id); };
+  var pp = $('pp'), seek = $('seek'), timeEl = $('time'), muteBtn = $('mute'), fsBtn = $('fs'), cover = $('cover');
+  var center = $('center'), tapEl = $('tap'), fl = $('fl'), fr = $('fr');
+  var touch = window.matchMedia('(pointer: coarse)');
+  var hideT = 0, scrubbing = false, lastTap = 0, tapT = 0;
+  function fmt(t) { if (!isFinite(t)) t = 0; var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+  function toggle() { if (film.paused || film.ended) film.play().catch(function () {}); else film.pause(); }
+  function label() { var t = film.ended ? 'Replay' : (film.paused ? 'Play' : 'Pause'); pp.textContent = t; center.textContent = t; }
+  function showUI() {
+    frame.classList.add('ui'); clearTimeout(hideT);
+    if (!film.paused) hideT = setTimeout(function () { frame.classList.remove('ui'); }, touch.matches ? 3500 : 2500);
+  }
+  function paint() {
+    var d = film.duration || 0;
+    if (!scrubbing) { seek.value = d ? (film.currentTime / d) * 1000 : 0; }
+    seek.style.setProperty('--p', (seek.value / 10) + '%');
+    timeEl.textContent = fmt(film.currentTime) + ' / ' + fmt(d);
+  }
+  function skip(sec, el) {
+    film.currentTime = Math.max(0, Math.min((film.duration || 0), film.currentTime + sec));
+    el.classList.remove('go'); void el.offsetWidth; el.classList.add('go'); paint();
+  }
+  cover.addEventListener('click', toggle);
+  pp.addEventListener('click', toggle);
+  center.addEventListener('click', function () { toggle(); showUI(); });
+  film.addEventListener('click', function () { if (!touch.matches) toggle(); });
+  film.addEventListener('play', function () { frame.classList.add('started'); frame.classList.remove('paused'); label(); showUI(); });
+  film.addEventListener('pause', function () { frame.classList.add('paused'); label(); showUI(); });
+  film.addEventListener('ended', function () { frame.classList.add('paused'); label(); showUI(); });
+  film.addEventListener('timeupdate', paint);
+  film.addEventListener('loadedmetadata', paint);
+  seek.addEventListener('input', function () { scrubbing = true; film.currentTime = (seek.value / 1000) * (film.duration || 0); paint(); showUI(); });
+  seek.addEventListener('change', function () { scrubbing = false; });
+  muteBtn.addEventListener('click', function () { film.muted = !film.muted; muteBtn.textContent = film.muted ? 'Unmute' : 'Mute'; showUI(); });
+  frame.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') showUI(); });
+  frame.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && !film.paused) frame.classList.remove('ui'); });
+  frame.addEventListener('keydown', function () { showUI(); });
+
+  /* Touch tap layer: one tap toggles controls, double tap left or right skips 10s, double tap middle plays or pauses. */
+  tapEl.addEventListener('click', function (e) {
+    var now = Date.now(), r = tapEl.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
+    clearTimeout(tapT);
+    if (now - lastTap < 300) {
+      lastTap = 0;
+      if (x < 0.4) skip(-10, fl); else if (x > 0.6) skip(10, fr); else toggle();
+      showUI();
+    } else {
+      lastTap = now;
+      tapT = setTimeout(function () {
+        if (frame.classList.contains('ui')) { clearTimeout(hideT); frame.classList.remove('ui'); } else showUI();
+      }, 260);
+    }
+  });
+
+  /* Fullscreen: touch fullscreens the frame so the custom controls stay. iPhone cannot, so it falls back to the native player. */
+  fsBtn.addEventListener('click', function () {
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    var target = touch.matches ? frame : film;
+    if (target.requestFullscreen) {
+      target.requestFullscreen().then(function () {
+        if (touch.matches && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {});
+      }).catch(function () {});
+    } else if (film.webkitEnterFullscreen) film.webkitEnterFullscreen();
+  });
+  function mode() {
+    frame.classList.toggle('touch', touch.matches);
+    film.controls = !touch.matches && document.fullscreenElement === film;
+    fsBtn.textContent = document.fullscreenElement === frame ? 'Exit' : 'Fullscreen';
+  }
+  document.addEventListener('fullscreenchange', mode);
+  film.addEventListener('webkitbeginfullscreen', function () { film.controls = true; });
+  film.addEventListener('webkitendfullscreen', function () { film.controls = false; });
+  mode(); label();
+  if (touch.addEventListener) touch.addEventListener('change', mode);
+
+  /* Closing line reveal on scroll, via IntersectionObserver */
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .3 });
+  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+
+  /* Confetti: feedback for the ending and the button. One accent plus neutrals. */
+  var cv = document.getElementById('fx'), cx = cv.getContext('2d'), parts = [], raf = 0;
+  function size() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
+  size(); addEventListener('resize', size);
+  var colors = ['#ffde59', '#ffe98f', '#fff3c2', '#4b4bd1', '#8c8cf0'];
+  function burst() {
+    if (reduce) return;
+    var w = cv.width, h = cv.height;
+    for (var i = 0; i < 160; i++) {
+      var left = i % 2 === 0;
+      parts.push({
+        x: left ? 0 : w, y: h * .85,
+        vx: (left ? 1 : -1) * (6 + Math.random() * 14) * devicePixelRatio,
+        vy: -(14 + Math.random() * 18) * devicePixelRatio,
+        s: (6 + Math.random() * 8) * devicePixelRatio,
+        r: Math.random() * 6, vr: (Math.random() - .5) * .4,
+        c: colors[(Math.random() * colors.length) | 0], life: 1
+      });
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    parts = parts.filter(function (p) { return p.life > 0 && p.y < cv.height + 40; });
+    parts.forEach(function (p) {
+      p.vy += .5 * devicePixelRatio; p.vx *= .99;
+      p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= .004;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+      cx.globalAlpha = Math.max(p.life, 0); cx.fillStyle = p.c;
+      cx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); cx.restore();
+    });
+    raf = parts.length ? requestAnimationFrame(tick) : 0;
+    if (!parts.length) cx.clearRect(0, 0, cv.width, cv.height);
+  }
+  document.getElementById('confetti').addEventListener('click', burst);
+  setTimeout(burst, 900);
+})();
+</script>
+</body>
+</html>
